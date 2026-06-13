@@ -97,12 +97,21 @@ const CampaignLogSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+const AgentCheckpointSchema = new mongoose.Schema({
+  threadId: { type: String, required: true, index: true },
+  checkpointId: { type: String, required: true },
+  parentCheckpointId: { type: String },
+  checkpoint: { type: mongoose.Schema.Types.Mixed, required: true },
+  metadata: { type: mongoose.Schema.Types.Mixed }
+}, { timestamps: true });
+
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 const Volunteer = mongoose.models.Volunteer || mongoose.model('Volunteer', VolunteerSchema);
 const Campaign = mongoose.models.Campaign || mongoose.model('Campaign', CampaignSchema);
 const Donor = mongoose.models.Donor || mongoose.model('Donor', DonorSchema);
 const Donation = mongoose.models.Donation || mongoose.model('Donation', DonationSchema);
 const CampaignLog = mongoose.models.CampaignLog || mongoose.model('CampaignLog', CampaignLogSchema);
+const AgentCheckpoint = mongoose.models.AgentCheckpoint || mongoose.model('AgentCheckpoint', AgentCheckpointSchema);
 
 async function seed() {
   console.log('Connecting to database:', MONGODB_URI);
@@ -117,17 +126,18 @@ async function seed() {
   await Donor.deleteMany({});
   await Donation.deleteMany({});
   await CampaignLog.deleteMany({});
+  await AgentCheckpoint.deleteMany({});
 
   const salt = await bcrypt.genSalt(10);
   const commonPassword = await bcrypt.hash('Password123', salt);
 
   console.log('Creating users...');
   const users = await User.create([
-    { name: 'Aditya Vardhan', email: 'aditya.admin@nayepankh.org', password: commonPassword, role: 'Admin' },
-    { name: 'Sarah Khan', email: 'sarah.coord@nayepankh.org', password: commonPassword, role: 'Coordinator' },
-    { name: 'Rahul Sharma', email: 'rahul.vol@gmail.com', password: commonPassword, role: 'Volunteer' },
-    { name: 'Priya Patel', email: 'priya.vol@gmail.com', password: commonPassword, role: 'Volunteer' },
-    { name: 'Kabir Mehta', email: 'kabir.vol@gmail.com', password: commonPassword, role: 'Volunteer' }
+    { name: 'Aarav Singhania', email: 'aarav.admin@nayepankh.org', password: commonPassword, role: 'Admin' },
+    { name: 'Zara Qureshi', email: 'zara.coord@nayepankh.org', password: commonPassword, role: 'Coordinator' },
+    { name: 'Rohan Chatterjee', email: 'rohan.vol@gmail.com', password: commonPassword, role: 'Volunteer' },
+    { name: 'Kavya Menon', email: 'kavya.vol@gmail.com', password: commonPassword, role: 'Volunteer' },
+    { name: 'Siddharth Rao', email: 'siddharth.vol@gmail.com', password: commonPassword, role: 'Volunteer' }
   ]);
 
   console.log('Creating volunteer profiles...');
@@ -137,7 +147,7 @@ async function seed() {
     location: 'Delhi',
     availability: 8,
     skills: ['Teaching', 'Public Speaking'],
-    screeningNotes: 'Rahul is highly enthusiastic about teaching underprivileged children. He has prior volunteering experience with local tutoring cells.',
+    screeningNotes: 'Rohan is highly enthusiastic about teaching underprivileged children. He has prior volunteering experience with local tutoring cells.',
     targetDomain: 'Education',
     onboardingComplete: true
   });
@@ -148,7 +158,7 @@ async function seed() {
     location: 'Mumbai',
     availability: 6,
     skills: ['Event Management', 'Public Speaking'],
-    screeningNotes: 'Priya has strong communication skills and event organization experience. Eager to support awareness drives.',
+    screeningNotes: 'Kavya has strong communication skills and event organization experience. Eager to support awareness drives.',
     targetDomain: 'Hygiene',
     onboardingComplete: true
   });
@@ -163,13 +173,13 @@ async function seed() {
     screeningNotes: 'Screening in progress. Candidate expressed strong passion for stray animal feeding and rescue operations.',
     targetDomain: 'Animal Welfare',
     chatSessions: [
-      { sessionId: 'kabir_session_1', title: 'Onboarding Chat' }
+      { sessionId: 'siddharth_session_1', title: 'Onboarding Chat' }
     ],
     chatHistory: [
-      { sessionId: 'kabir_session_1', role: 'model', text: 'Hello Kabir! Welcome to NayePankh Foundation. I am your onboarding AI screening coordinator. Which city are you currently located in?' },
-      { sessionId: 'kabir_session_1', role: 'user', text: 'Hey, I am from Kanpur.' },
-      { sessionId: 'kabir_session_1', role: 'model', text: 'Wonderful, Kanpur is an active region for our local drives. How many hours per week would you be able to dedicate to volunteering?' },
-      { sessionId: 'kabir_session_1', role: 'user', text: 'I can do around 4 hours a week.' }
+      { sessionId: 'siddharth_session_1', role: 'model', text: 'Hello Siddharth! Welcome to NayePankh Foundation. I am your onboarding AI screening coordinator. Which city are you currently located in?' },
+      { sessionId: 'siddharth_session_1', role: 'user', text: 'Hey, I am from Kanpur.' },
+      { sessionId: 'siddharth_session_1', role: 'model', text: 'Wonderful, Kanpur is an active region for our local drives. How many hours per week would you be able to dedicate to volunteering?' },
+      { sessionId: 'siddharth_session_1', role: 'user', text: 'I can do around 4 hours a week.' }
     ],
     onboardingComplete: false
   });
@@ -234,9 +244,9 @@ async function seed() {
 
   console.log('Creating donors...');
   const donors = await Donor.create([
-    { name: 'Rajesh Kumar', email: 'rajesh.k@gmail.com', lastDonationDate: new Date('2026-06-01'), donationFrequency: 3, totalDonated: 15000 },
-    { name: 'Pooja Sharma', email: 'pooja.s@gmail.com', lastDonationDate: new Date('2026-06-10'), donationFrequency: 1, totalDonated: 25000 },
-    { name: 'Amit Patel', email: 'amit.p@gmail.com', lastDonationDate: new Date('2026-04-12'), donationFrequency: 6, totalDonated: 5000 }
+    { name: 'Vikram Ahuja', email: 'vikram.a@gmail.com', lastDonationDate: new Date('2026-06-01'), donationFrequency: 3, totalDonated: 15000 },
+    { name: 'Naina Kapoor', email: 'naina.k@gmail.com', lastDonationDate: new Date('2026-06-10'), donationFrequency: 1, totalDonated: 25000 },
+    { name: 'Arjun Reddy', email: 'arjun.r@gmail.com', lastDonationDate: new Date('2026-04-12'), donationFrequency: 6, totalDonated: 5000 }
   ]);
 
   console.log('Creating donation details...');
@@ -245,6 +255,24 @@ async function seed() {
     { donorId: donors[0]._id, amount: 10000, date: new Date('2026-03-01'), campaignCategory: 'Education' },
     { donorId: donors[1]._id, amount: 25000, date: new Date('2026-06-10'), campaignCategory: 'Hygiene' },
     { donorId: donors[2]._id, amount: 5000, date: new Date('2026-04-12'), campaignCategory: 'Animal Welfare' }
+  ]);
+
+  console.log('Creating agent checkpoints...');
+  await AgentCheckpoint.create([
+    {
+      threadId: 'onboarding_thread_1',
+      checkpointId: 'chk_1',
+      parentCheckpointId: null,
+      checkpoint: { state: { status: 'started', currentStep: 'greeting' } },
+      metadata: { source: 'seed', type: 'volunteer_onboarding' }
+    },
+    {
+      threadId: 'onboarding_thread_1',
+      checkpointId: 'chk_2',
+      parentCheckpointId: 'chk_1',
+      checkpoint: { state: { status: 'in_progress', currentStep: 'location_asked' } },
+      metadata: { source: 'seed', type: 'volunteer_onboarding' }
+    }
   ]);
 
   console.log('Database seeding complete successfully!');

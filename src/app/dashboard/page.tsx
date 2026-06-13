@@ -386,7 +386,7 @@ export default function DashboardPage() {
                       <tr key={i}>
                         {[...Array(6)].map((_, j) => (
                           <td key={j} className="px-4 py-4">
-                            <div className="h-3 rounded bg-white/5 animate-pulse" style={{ width: `${60 + Math.random() * 30}%` }} />
+                            <div className="h-3 rounded bg-white/5 animate-pulse" style={{ width: `${60 + ((i * 7 + j * 13) % 30)}%` }} />
                           </td>
                         ))}
                       </tr>
